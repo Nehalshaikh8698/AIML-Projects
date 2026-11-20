@@ -1,0 +1,4 @@
+# Install this on top of backend/requirements.txt to load a trained DenseNet checkpoint.
+# Select the appropriate wheel for your CPU/CUDA setup when needed.
+torch>=2.5
+torchvision>=0.20

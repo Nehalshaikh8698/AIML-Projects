@@ -1,0 +1,18 @@
+{
+  "Name": "MedScan AI local Orthanc",
+  "DicomAet": "MEDSCANORTHANC",
+  "DicomPort": 4242,
+  "HttpPort": 8042,
+  "RemoteAccessAllowed": true,
+  "AuthenticationEnabled": true,
+  "RegisteredUsers": {
+    "demo": "demo-change-me"
+  },
+  "StorageDirectory": "/var/lib/orthanc/db",
+  "IndexDirectory": "/var/lib/orthanc/db",
+  "HttpServerEnabled": true,
+  "DicomServerEnabled": true,
+  "OverwriteInstances": false,
+  "MaximumPatientCount": 0,
+  "MaximumStorageSize": 0
+}

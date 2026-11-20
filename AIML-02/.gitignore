@@ -1,0 +1,73 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Datasets and medical images
+data/
+datasets/
+*.dcm
+*.nii
+*.nii.gz
+*.tar
+*.tar.gz
+
+# ML model weights
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.safetensors
+checkpoints/
+weights/
+
+# DVC
+.dvc/cache/
+*.dvc.tmp
+
+# Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+build/
+.vite/
+
+# Backend runtime files
+backend/storage/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Operating system
+.DS_Store
+Thumbs.db
+desktop.ini

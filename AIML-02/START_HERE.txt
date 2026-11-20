@@ -1,0 +1,29 @@
+MEDSCAN AI — START HERE
+
+LOW-STORAGE QUICK START (Windows + VS Code)
+
+1) Extract this ZIP. Do not download the full 42 GB NIH dataset just to start the app.
+2) Open the extracted medscan-ai folder in VS Code.
+3) Open PowerShell terminal #1 at the project root and run:
+
+   cd backend
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   python -m pip install --upgrade pip
+   pip install -r requirements.txt
+   $env:DEMO_MODE="true"
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+4) Open terminal #2 at the project root and run:
+
+   cd frontend
+   npm install
+   npm run dev
+
+5) Open http://localhost:5173
+
+DEMO MODE IS NOT AI INFERENCE. It uses explicitly labelled simulated scores and an illustrative image map so you can demonstrate the upload, review, and audit workflow without a dataset or trained model. Do not present these outputs as model predictions or Grad-CAM.
+
+For actual DenseNet121 inference, download a permitted NIH ChestX-ray14 subset, train ml/train.py, and install backend/requirements-ml.txt. For MONAI 3D segmentation, you also need the MSD Task06_Lung dataset and the optional segmentation dependencies. MongoDB and Orthanc are available through Docker Compose. See README.md for full details.
+
+EDUCATIONAL USE ONLY — NOT FOR CLINICAL USE.

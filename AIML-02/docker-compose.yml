@@ -1,0 +1,66 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  orthanc:
+    image: jodogne/orthanc-plugins:1.12.8
+    restart: unless-stopped
+    command: ["/etc/orthanc/orthanc.json"]
+    ports:
+      - "8042:8042"
+      - "4242:4242"
+    volumes:
+      - ./orthanc/orthanc.json:/etc/orthanc/orthanc.json:ro
+      - orthanc_data:/var/lib/orthanc/db
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment:
+      MONGO_URI: ${MONGO_URI:-mongodb://mongo:27017}
+      MONGO_DATABASE: ${MONGO_DATABASE:-medscan}
+      MODEL_PATH: ${MODEL_PATH:-/app/app/models/densenet121_nih14.pth}
+      MODEL_THRESHOLD: ${MODEL_THRESHOLD:-0.50}
+      SEGMENTATION_MODEL_PATH: ${SEGMENTATION_MODEL_PATH:-/app/app/models/unet3d_msd_lung.pth}
+      MAX_VOLUME_MB: ${MAX_VOLUME_MB:-200}
+      ORTHANC_URL: ${ORTHANC_URL:-http://orthanc:8042}
+      ORTHANC_USERNAME: ${ORTHANC_USERNAME:-demo}
+      ORTHANC_PASSWORD: ${ORTHANC_PASSWORD:-demo-change-me}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-20}
+      DEMO_MODE: ${DEMO_MODE:-true}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app/models:/app/app/models:ro
+      - backend_storage:/app/storage
+    depends_on:
+      mongo:
+        condition: service_healthy
+      orthanc:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_PROXY_TARGET: http://backend:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
+  orthanc_data:
+  backend_storage:

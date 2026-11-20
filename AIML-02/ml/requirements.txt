@@ -1,0 +1,7 @@
+numpy>=1.26,<3
+pandas>=2.2
+Pillow>=10.4
+scikit-learn>=1.5
+torch>=2.5
+torchvision>=0.20
+tqdm>=4.66

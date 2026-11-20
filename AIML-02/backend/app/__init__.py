@@ -1,0 +1,1 @@
+"""MedScan AI backend package."""

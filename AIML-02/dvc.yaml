@@ -1,0 +1,33 @@
+stages:
+  train:
+    cmd: >-
+      python ml/train.py
+      --data-dir data/NIH-ChestXray14/images
+      --labels-csv data/NIH-ChestXray14/Data_Entry_2017_v2020.csv
+      --epochs 5
+      --batch-size 16
+    deps:
+      - ml/train.py
+      - data/NIH-ChestXray14/Data_Entry_2017_v2020.csv
+      - data/NIH-ChestXray14/images
+    outs:
+      - backend/app/models/densenet121_nih14.pth
+    metrics:
+      - ml/outputs/metrics.json:
+          cache: false
+
+  train_segmentation:
+    cmd: >-
+      python ml/train_segmentation.py
+      --data-dir data/Task06_Lung
+      --epochs 100
+    deps:
+      - ml/train_segmentation.py
+      - data/Task06_Lung/dataset.json
+      - data/Task06_Lung/imagesTr
+      - data/Task06_Lung/labelsTr
+    outs:
+      - backend/app/models/unet3d_msd_lung.pth
+    metrics:
+      - ml/outputs/segmentation_metrics.json:
+          cache: false
