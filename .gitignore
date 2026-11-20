@@ -1,0 +1,38 @@
+# Python virtual environment
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Dataset files
+data/raw/
+data/processed/*.csv
+
+# Model artifacts
+artifacts/*.pkl
+
+# MLflow
+mlflow.db
+mlruns/
+mlartifacts/
+
+# Environment variables
+.env
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+temp/
+tmp/
