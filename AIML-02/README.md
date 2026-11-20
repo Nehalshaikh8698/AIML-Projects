@@ -1,254 +1,428 @@
-# MedScan AI — AI-Assisted Medical Imaging Review (Educational MVP)
+# 🏥 MedScan AI – AI-Assisted Medical Imaging and Diagnosis System
 
-A full-stack educational project for chest X-ray and CT research workflows. It includes a PyTorch DenseNet-121 multi-label classification pipeline, a MONAI 3D U-Net segmentation pipeline, Grad-CAM visual explanations, a FastAPI service, a React review dashboard, MongoDB-backed study/audit records, and optional Orthanc DICOM integration.
+An AI-powered medical imaging platform designed to assist with the analysis and visualization of medical images, including X-rays, CT scans, and MRI scans.
 
-> **Important medical notice:** This software is for education and research only. It is not a medical device, is not clinically validated, and must not be used to diagnose, triage, monitor, or treat patients. Predictions and heatmaps are experimental model outputs, not medical advice. Use only properly de-identified research data. A qualified clinician must not rely on this software for patient care.
+MedScan AI combines deep learning, medical image processing, explainable AI, and a doctor review workflow to provide an integrated medical imaging analysis platform.
 
-## What is included
+> **Disclaimer:** MedScan AI is an educational and research project. It is not a certified medical device and must not be used for clinical diagnosis or treatment decisions.
 
-- **ML pipeline:** train/evaluate a DenseNet-121 on NIH ChestX-ray14 labels (14-label multi-label classification).
-- **Inference API:** with trained checkpoints installed, accepts chest X-ray PNG/JPEG or DICOM, returns 14 model scores, and produces a Grad-CAM overlay. Before training, optional `DEMO_MODE` provides clearly-labelled simulated outputs only so the upload/review/audit workflow can be shown. A separate CT endpoint accepts NIfTI volumes and produces a 3D U-Net segmentation mask preview when a trained MONAI checkpoint is available.
-- **Review dashboard:** upload a scan, inspect model output and heatmap, record an approve/reject review, and inspect the audit trail.
-- **Data/model versioning:** DVC pipeline configuration and instructions.
-- **DICOM workflow:** Orthanc server plus an API route that fetches the first instance in an Orthanc study and analyzes it. **CT segmentation workflow:** MONAI 3D U-Net trained with Medical Segmentation Decathlon Task06_Lung.
-- **Containerization:** Docker Compose for MongoDB, Orthanc, FastAPI, and Vite/React.
+---
 
-## Chosen dataset and task
+## 📌 Project Overview
 
-The classification pipeline uses **NIH ChestX-ray14**. The model predicts 14 reported findings: Atelectasis, Cardiomegaly, Effusion, Infiltration, Mass, Nodule, Pneumonia, Pneumothorax, Consolidation, Edema, Emphysema, Fibrosis, Pleural Thickening, and Hernia. It is a multi-label classification task; several labels may be scored for one image.
+Medical imaging plays an important role in identifying and monitoring diseases. However, reviewing large volumes of medical images can be time-consuming.
 
-Dataset information and access: <https://nihcc.app.box.com/v/ChestXray-Nihcc>
+MedScan AI aims to simplify this process by providing a platform where users can:
 
-The 3D segmentation pipeline uses **Medical Segmentation Decathlon Task06_Lung**. Download the official dataset from <http://medicaldecathlon.com/> and extract it as `data/Task06_Lung/` with `dataset.json`, `imagesTr/`, and `labelsTr/`. Check the dataset documentation for the exact label definitions before interpreting masks.
+- Upload medical images.
+- Process and analyze imaging studies.
+- Generate AI-assisted analysis results.
+- Visualize model explanations using Grad-CAM.
+- Perform medical image segmentation.
+- Review analysis results through a doctor review interface.
+- Maintain study history and audit logs.
 
-### Low-storage download (recommended for a laptop)
+The system is designed with a modular architecture so that trained deep learning models and additional medical imaging services can be integrated.
 
-**Do not download all 12 NIH image archives.** The complete dataset is about 42–45 GB. The image archives are split into batches. You can start with only `images_001.tar.gz` (reported at about 1.9 GB and approximately 4,999 images in one published archive inventory), plus the small metadata CSV. The NIH metadata CSV covers the full dataset; the training loader automatically skips rows whose image files are not present locally. This lets the same 14-label training pipeline work on a partial local subset. Archive sizes can vary by mirror/version, so check the size shown by Box before downloading.
+---
 
-1. In the NIH Box repository, open `CXR8` → `images`.
-2. Download only `images_001.tar.gz`. Do not select the other image archives.
-3. Download `Data_Entry_2017_v2020.csv` from the `CXR8` folder.
-4. Extract the archive so the `.png` files are directly inside `data/NIH-ChestXray14/images/` (not buried in an extra nested folder).
-5. After confirming the PNG files extracted correctly, delete the downloaded `.tar.gz` archive to reclaim space.
+## ✨ Key Features
 
-Expected layout:
+### 1. Medical Image Upload
+- Upload X-ray images.
+- Support medical imaging workflows for CT and MRI.
+- Validate uploaded files.
+- Store study information and metadata.
+
+### 2. AI-Based Image Analysis
+- Deep learning-based image classification architecture.
+- Designed for chest X-ray analysis.
+- Supports integration with trained DenseNet121 models.
+- Provides a demo mode when trained model weights are unavailable.
+
+### 3. Explainable AI – Grad-CAM
+- Visual explanation of model predictions.
+- Highlights image regions that influence model output.
+- Helps users understand model behavior.
+
+*Actual Grad-CAM visualizations require a trained model checkpoint.*
+
+### 4. Medical Image Segmentation
+- Designed for 3D medical image segmentation.
+- Supports integration of segmentation models.
+- Provides a foundation for CT and MRI volume analysis.
+
+### 5. Doctor Review System
+- Review uploaded medical studies.
+- Record approval or rejection decisions.
+- Add reviewer comments.
+- Maintain review history.
+
+### 6. Audit Logging
+- Record important study-related activities.
+- Track review actions.
+- Maintain persistent audit events using MongoDB when available.
+
+### 7. API Documentation
+- REST API developed using FastAPI.
+- Interactive API documentation through Swagger UI.
+- Structured endpoints for study management and image processing.
+
+---
+
+## 🛠️ Tech Stack
+
+| Category | Technologies |
+|---|---|
+| Frontend | React.js, Vite, JavaScript |
+| Backend | Python, FastAPI |
+| Deep Learning | PyTorch |
+| Medical Imaging | MONAI, DICOM |
+| Explainable AI | Grad-CAM |
+| Database | MongoDB |
+| Medical Image Server | Orthanc |
+| Experiment / Data Versioning | DVC |
+| Containerization | Docker |
+| API Testing | Swagger UI |
+
+---
+
+## 🏗️ System Architecture
 
 ```text
-data/NIH-ChestXray14/
-├── Data_Entry_2017_v2020.csv
-└── images/
-    ├── 00000001_000.png
-    ├── 00000001_001.png
-    └── ... (only the downloaded batch)
+              USER
+                |
+                v
+        React Frontend
+                |
+                v
+          FastAPI Backend
+                |
+       +--------+---------+
+       |        |         |
+       v        v         v
+   Image      Study     Doctor
+  Processing  Storage   Review
+       |        |         |
+       v        v         v
+   Deep Learning       Audit Logs
+       |
+   +---+----------------+
+   |                    |
+   v                    v
+Classification      Segmentation
+   |
+   v
+ Grad-CAM
+   |
+   v
+Analysis Results
+   |
+   v
+ React Dashboard
 ```
 
-The CSV must contain `Image Index` and `Finding Labels` columns. The loader filters the CSV to image files that actually exist in `images/`. For a first local run, use `--limit 4000` to cap the number of available images used. Do not commit the images to Git.
+---
 
-If even one archive does not fit, do not download it: use a cloud notebook with temporary storage or switch to a smaller sample dataset and adjust the label mapping before training. The CT segmentation dataset is a separate download; skip that phase until the X-ray workflow is working.
-
-## Fastest low-storage setup on Windows (without Docker)
-
-This mode starts the React dashboard and FastAPI backend without downloading NIH images, PyTorch, MONAI, MongoDB, or Orthanc. It uses the clearly-labelled demo workflow and temporary in-memory study storage. DICOM upload decoding is available through the lightweight `pydicom` dependency; Orthanc and persistent MongoDB are optional Docker services.
-
-**Terminal 1 — backend (PowerShell, from the project root):**
-
-```powershell
-cd backend
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-$env:DEMO_MODE="true"
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-**Terminal 2 — frontend (from the project root):**
-
-```powershell
-cd frontend
-npm install
-npm run dev
-```
-
-Open <http://localhost:5173>. The dashboard supports upload, demo-only visualization, approve/reject review, and audit history. Because this local lightweight setup does not run MongoDB, its records are cleared when the backend restarts. Use Docker Compose for persistent MongoDB and Orthanc services.
-
-## Quick start — run the dashboard immediately (no dataset required)
-
-Prerequisites: Docker Desktop (or Docker Engine + Compose). The first Docker build downloads the service images and Python packages, so it still needs an internet connection and several GB of temporary disk space. It does **not** download the 42 GB NIH dataset.
-
-1. Copy configuration:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   On Windows PowerShell:
-
-   ```powershell
-   Copy-Item .env.example .env
-   ```
-
-2. Leave `DEMO_MODE=true` in `.env` for the first run. No dataset or checkpoint is needed for the dashboard and doctor-review workflow.
-3. Start the platform:
-
-   ```bash
-   docker compose up --build
-   ```
-
-4. Open:
-   - React dashboard: <http://localhost:5173>
-   - FastAPI / Swagger: <http://localhost:8000/docs>
-   - Orthanc Explorer: <http://localhost:8042>
-
-   Orthanc demo login: `demo` / `demo-change-me`. The copied `.env` configures the backend client credentials; to change the Orthanc login itself, also update `RegisteredUsers` in `orthanc/orthanc.json` and keep the backend username/password values in `.env` aligned. Never expose this local-demo configuration to the public internet.
-
-5. Upload a sample PNG/JPG X-ray image to exercise the study queue, image viewer, review decisions, and audit log. With no trained checkpoint and `DEMO_MODE=true`, the backend returns **simulated image-statistics scores and an illustrative image map**. These are not model predictions and the map is not Grad-CAM. The interface labels these outputs as demo-only.
-
-6. To switch to real model inference, train DenseNet121 using the steps below. Once `backend/app/models/densenet121_nih14.pth` exists, the backend automatically prefers that checkpoint over demo mode. Set `DEMO_MODE=false` to disable the fallback entirely.
-
-## Train the model
-
-Create a virtual environment and install ML dependencies. From the repository root:
-
-```bash
-python -m venv .venv
-# Windows PowerShell: .venv\\Scripts\\Activate.ps1
-# macOS/Linux: source .venv/bin/activate
-python -m pip install --upgrade pip
-pip install -r ml/requirements.txt
-```
-
-Run training:
-
-```bash
-python ml/train.py \
-  --data-dir data/NIH-ChestXray14/images \
-  --labels-csv data/NIH-ChestXray14/Data_Entry_2017_v2020.csv \
-  --epochs 3 \
-  --batch-size 4 \
-  --limit 4000
-```
-
-PowerShell equivalent (single line):
-
-```powershell
-python ml/train.py --data-dir data/NIH-ChestXray14/images --labels-csv data/NIH-ChestXray14/Data_Entry_2017_v2020.csv --epochs 3 --batch-size 4 --limit 4000
-```
-
-Training defaults to CUDA when available and otherwise uses CPU. On a smaller GPU, lower `--batch-size` to `4` or `8`. For a first smoke test, use `--epochs 1 --limit 2000`; this is only a pipeline check, not a useful model. Training downloads ImageNet initialization weights from Torchvision on first run; an internet connection is needed for that download. The trained checkpoint and JSON metrics are written to `backend/app/models/` and `ml/outputs/`.
-
-For the CT model, install the optional MONAI dependencies and run:
-
-```bash
-pip install -r ml/requirements-segmentation.txt
-python ml/train_segmentation.py --data-dir data/Task06_Lung --epochs 100 --batch-size 1
-```
-
-The 3D segmentation training is compute-intensive. Install `ml/requirements-segmentation.txt` first. Begin with `--max-train-cases 4 --epochs 1` to test the pipeline, not to produce a useful model. It writes `backend/app/models/unet3d_msd_lung.pth` and `ml/outputs/segmentation_metrics.json`. The full CT segmentation path needs the separate Medical Segmentation Decathlon Task06_Lung download and is not part of the no-dataset quick demo.
-
-For real classification inference in a local backend environment, install `backend/requirements-ml.txt` on top of `backend/requirements.txt` (choose the PyTorch wheel matching your CPU/GPU from <https://pytorch.org/get-started/locally/>). For trained CT inference, install `backend/requirements-segmentation.txt`. These packages are intentionally excluded from the lightweight demo backend image. For Docker-based real inference, add the relevant optional requirements to `backend/Dockerfile` before rebuilding the backend image.
-
-### Training data notes
-
-- NIH ChestX-ray14 labels are mined from report text and are noisy labels, not definitive diagnoses.
-- The classification script groups NIH images by the patient identifier prefix in the filename before splitting into train/validation/test. Verify the split against the original patient metadata before making research-grade claims.
-- The default training setup is a practical starter. It is not a validated clinical model; tune thresholds, calibration, and evaluation protocols before making research claims.
-- Metrics include per-label AUROC where it can be computed and macro AUROC over valid labels. AUROC is not a measure of clinical safety.
-
-## Run without Docker (optional)
-
-### Backend
-
-```bash
-cd backend
-python -m venv .venv
-# activate the environment, then:
-pip install -r requirements.txt
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-Set `MONGO_URI` to a reachable MongoDB instance. If MongoDB is unavailable, the app logs a warning and uses an in-memory store; records will be lost on restart. Set `MODEL_PATH` to the trained checkpoint path. The default relative path is `app/models/densenet121_nih14.pth` when launched from `backend/`.
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Vite proxies `/api` and `/media` to `http://localhost:8000`.
-
-## API overview
-
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `GET` | `/api/health` | API, database, and model readiness |
-| `GET` | `/api/studies` | List recent studies |
-| `GET` | `/api/studies/{study_id}` | Get one study and prediction |
-| `POST` | `/api/studies/upload` | Upload chest X-ray PNG/JPEG/DICOM and run classification + Grad-CAM |
-| `POST` | `/api/ct/segment` | Upload NIfTI CT volume and run MONAI 3D U-Net segmentation |
-| `POST` | `/api/studies/{study_id}/review` | Record `approved` or `rejected` review |
-| `GET` | `/api/studies/{study_id}/audit` | Retrieve audit events |
-| `GET` | `/api/orthanc/studies` | List studies currently in Orthanc |
-| `POST` | `/api/orthanc/studies/{orthanc_id}/analyze` | Fetch first DICOM instance and run inference |
-
-Open `/docs` for the interactive API documentation. The upload API accepts multipart fields `file`, `patient_ref` (use a random non-identifying study code), and `notes`.
-
-## DICOM / Orthanc
-
-Orthanc runs on HTTP `8042` and DICOM `4242`. In the Orthanc Explorer, sign in with the local-demo credentials, then upload a de-identified DICOM study. In the dashboard, use **DICOM studies** to list studies and analyze one. The demo integration uses the first instance in a study; production systems must handle all series/instances, modalities, pixel spacing, transfer syntaxes, and study-level validation. For the 3D route, upload a de-identified `.nii` or `.nii.gz` CT volume using the **Segment CT volume** panel. The interface previews the middle slice and mask only; the full source volume is not exposed in the viewer.
-
-Do not upload real patient-identifiable data into this educational demo. Orthanc and the API are configured for local development and are not hardened for production.
-
-## DVC (dataset and model versioning)
-
-Install DVC:
-
-```bash
-pip install dvc
-```
-
-Initialize and add the large dataset (after arranging the folder):
-
-```bash
-dvc init
-dvc add data/NIH-ChestXray14
-```
-
-Configure a remote suitable for your team (for example, an S3-compatible bucket or shared storage):
-
-```bash
-dvc remote add -d storage <YOUR_DVC_REMOTE_URL>
-dvc push
-```
-
-The DVC remote is intentionally not preconfigured. Never commit credentials. Track both datasets with DVC (`dvc add data/NIH-ChestXray14` and `dvc add data/Task06_Lung`). Run only the stage you have data for: `dvc repro train` for classification or `dvc repro train_segmentation` for CT segmentation. Run `dvc repro` only after both datasets are available.
-
-## Project structure
+## 📂 Project Structure
 
 ```text
-medscan-ai/
-├── backend/                  # FastAPI service, inference, Grad-CAM, MongoDB, Orthanc
-├── frontend/                 # React + Vite radiology review dashboard
-├── ml/                       # NIH classification + MSD CT segmentation training, metrics, DVC pipeline
-├── orthanc/                  # Orthanc configuration
-├── docs/                     # Model card and safety notes
-├── tests/                    # Backend tests
+AIML-02/
+│
+├── docs/
+│   ├── architecture.md
+│   └── screenshots/
+│       ├── 01-dashboard.png
+│       ├── 02-upload.png
+│       ├── 03-analysis.png
+│       ├── 04-gradcam.png
+│       ├── 05-segmentation.png
+│       ├── 06-doctor-review.png
+│       ├── 07-audit-logs.png
+│       └── 08-api-docs.png
+│
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   ├── core/
+│   │   ├── models/
+│   │   ├── services/
+│   │   └── main.py
+│   ├── tests/
+│   ├── requirements.txt
+│   └── Dockerfile
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   └── ...
+│   ├── package.json
+│   └── index.html
+│
+├── ml/
+│   ├── train.py
+│   ├── train_segmentation.py
+│   ├── prepare_metadata.py
+│   └── requirements.txt
+│
+├── orthanc/
+│   └── orthanc.json
+│
+├── tests/
 ├── docker-compose.yml
+├── dvc.yaml
+├── .env.example
+├── .gitignore
+├── NOTICE
 └── README.md
 ```
 
-## Known limitations / next improvements
+---
 
-1. No authentication or role-based access control is included. Reviewer identity is entered in the UI for the demo and is not verified.
-2. No clinical validation, external validation, prospective evaluation, or regulatory approval is included.
-3. The DenseNet model is trained on chest radiographs only; the separate 3D U-Net is trained on MSD Task06_Lung CT volumes. Neither model should be used on unsupported modalities or datasets.
-4. Grad-CAM is a coarse saliency visualization, not proof that the model reasoned correctly or localized disease.
-5. The upload path stores local image files; production storage needs encryption, retention controls, access checks, and secure audit trails.
-6. Orthanc integration analyzes only the first DICOM instance; production code must support full studies and multi-frame DICOM. CT NIfTI inference previews only the middle slice, not a validated full-volume viewer.
-7. The dataset may contain demographic and acquisition biases. Review `docs/model-card.md` before interpreting any output.
+## ⚙️ Installation and Setup
 
-## License
+### Prerequisites
 
-This repository scaffold is provided for educational use. Check the NIH dataset terms and every pretrained-weight license separately before redistribution or use.
+Install the following before running the project:
+
+- Python 3.10 or later (use a version supported by the project dependencies).
+- Node.js and npm.
+- MongoDB.
+- Git.
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Nehalshaikh8698/AIML-Projects.git
+```
+
+Navigate to the project:
+
+```bash
+cd AIML-Projects/AIML-02
+```
+
+### 2. Backend Setup
+
+Navigate to the backend directory:
+
+```bash
+cd backend
+```
+
+Create a virtual environment:
+
+```bash
+python -m venv .venv
+```
+
+Activate it on Windows:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Install dependencies:
+
+```bash
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+Configure environment variables using the provided `.env.example` file. Ensure MongoDB is running and the database connection settings are correct.
+
+Start the backend:
+
+```bash
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Backend URL:
+
+`http://localhost:8000`
+
+Swagger API documentation:
+
+`http://localhost:8000/docs`
+
+### 3. Frontend Setup
+
+Open another terminal:
+
+```bash
+cd AIML-Projects/AIML-02/frontend
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Frontend URL:
+
+`http://localhost:5173`
+
+---
+
+## 📸 Application Screenshots
+
+### 1. Dashboard
+
+![MedScan AI Dashboard](docs/screenshots/01-dashboard.png)
+
+### 2. Medical Image Upload
+
+![Medical Image Upload](docs/screenshots/02-upload.png)
+
+### 3. Image Analysis
+
+![Image Analysis](docs/screenshots/03-analysis.png)
+
+### 4. Grad-CAM Visualization
+
+![Grad-CAM Visualization](docs/screenshots/04-gradcam.png)
+
+### 5. Medical Image Segmentation
+
+![Medical Image Segmentation](docs/screenshots/05-segmentation.png)
+
+### 6. Doctor Review
+
+![Doctor Review](docs/screenshots/06-doctor-review.png)
+
+### 7. Audit Logs
+
+![Audit Logs](docs/screenshots/07-audit-logs.png)
+
+### 8. API Documentation
+
+![API Documentation](docs/screenshots/08-api-docs.png)
+
+---
+
+## 🔌 API Endpoints
+
+The backend exposes REST API endpoints for medical study management.
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/` | Root endpoint |
+| GET | `/health` | Application health information |
+| GET | `/api/studies` | Retrieve medical studies |
+| POST | `/api/studies/upload` | Upload a medical image |
+| GET | `/api/studies/{study_id}` | Retrieve a specific study |
+| POST | `/api/studies/{study_id}/review` | Submit a doctor review |
+| GET | `/api/studies/{study_id}/audit` | Retrieve study audit history |
+| POST | `/api/ct/segment` | CT segmentation workflow |
+
+For complete request and response details, visit:
+
+`http://localhost:8000/docs`
+
+---
+
+## 🧠 Machine Learning
+
+The project includes a machine learning pipeline designed for medical image analysis.
+
+### Classification
+
+- DenseNet121-based architecture.
+- Designed for chest X-ray classification.
+- Training pipeline available in `ml/train.py`.
+
+### Segmentation
+
+- Separate training pipeline available in `ml/train_segmentation.py`.
+- Designed for 3D medical image segmentation workflows.
+
+### Explainability
+
+Grad-CAM is intended to provide visual explanations of model predictions by highlighting influential image regions.
+
+### Model Availability
+
+The application currently supports demo mode when trained model checkpoints are unavailable.
+
+For actual model inference and explainability, the required trained model weights must be generated and placed in the configured model checkpoint locations.
+
+Demo outputs must not be interpreted as genuine medical predictions.
+
+---
+
+## 📚 Potential Datasets
+
+The following publicly available research datasets can be considered for model development, subject to their respective access requirements and usage licenses:
+
+| Dataset | Purpose |
+|---|---|
+| NIH ChestX-ray14 | Chest X-ray classification |
+| CheXpert | Chest X-ray classification |
+| RSNA Pneumonia | Pneumonia detection research |
+| MIMIC-CXR | Chest X-ray research |
+| Medical Segmentation Decathlon | Medical image segmentation |
+| BraTS | Brain tumor segmentation research |
+| LIDC-IDRI | Lung nodule imaging research |
+
+Dataset access, licensing, preprocessing, and storage requirements should be checked before use.
+
+---
+
+## 🔐 Security and Privacy
+
+- Avoid uploading identifiable patient information.
+- Use de-identified research images.
+- Protect database credentials through environment variables.
+- Keep model weights and datasets outside public Git repositories.
+- Apply appropriate access controls before deploying the application.
+
+---
+
+## ⚠️ Limitations
+
+- The application is intended for educational and research purposes.
+- Demo mode may return simulated results when trained model checkpoints are unavailable.
+- Model performance has not been clinically validated.
+- Grad-CAM requires an available trained classification model.
+- Segmentation quality depends on the availability and training of a suitable segmentation model.
+- The application is not a replacement for qualified medical professionals.
+
+---
+
+## 🚀 Future Enhancements
+
+- Integrate additional trained medical imaging models.
+- Improve multi-class disease classification.
+- Complete 3D CT and MRI segmentation workflows.
+- Integrate Orthanc for DICOM storage and retrieval.
+- Enhance Grad-CAM visualization.
+- Add role-based authentication for doctors and administrators.
+- Improve model evaluation and monitoring.
+- Deploy the application using Docker and cloud infrastructure.
+
+---
+
+## 👨‍💻 Author
+
+**Nehal Amanulla Shaikh**
+
+B.E. – Artificial Intelligence and Data Science
+
+GitHub: [Nehalshaikh8698](https://github.com/Nehalshaikh8698)
+
+Project Repository: [AIML-Projects](https://github.com/Nehalshaikh8698/AIML-Projects)
+
+---
+
+## 📄 License and Usage
+
+This project is developed for educational and internship purposes. Refer to the repository's `NOTICE` file and individual dataset licenses for applicable usage and attribution requirements.
+
+**MedScan AI – Exploring AI-assisted medical imaging through deep learning and explainable AI.**
